@@ -4,12 +4,13 @@ from __future__ import annotations
 
 import json
 import math
-import sys
 from typing import Any
 
-from lark import Lark, Token, Tree
+from lark import Lark, Tree
 from lark.exceptions import UnexpectedInput
 
+
+ZERO = 0
 
 GRAMMAR = r"""
 start: declaration* value
@@ -85,36 +86,38 @@ class Evaluator:
         """Evaluate and store one constant declaration."""
         name = str(node.children[1])
         if name in self.constants:
-            raise ConfigError(f"Константа '{name}' объявлена повторно")
+            message = (
+                f"Константа '{name}' объявлена повторно"
+            )
+            raise ConfigError(message)
         self.constants[name] = self.evaluate(node.children[2])
 
     def evaluate(self, node: Any) -> Any:
         """Evaluate one parsed value or expression."""
         if not isinstance(node, Tree):
             raise ConfigError("Внутренняя ошибка разбора")
+
         rule = str(node.data)
         args = node.children
-        if rule == "number":
-            return int(str(args[0]))
-        if rule == "string":
-            return str(args[0])[2:-1]
-        if rule == "array":
-            return [self.evaluate(item) for item in args]
-        if rule == "object":
-            return self.evaluate_object(args)
-        if rule == "pair":
-            return str(args[0]), self.evaluate(args[1])
-        if rule == "expression":
-            return self.evaluate(args[0])
-        if rule == "reference":
-            return self.get_constant(str(args[0]))
-        if rule in {"add", "subtract", "multiply", "divide"}:
-            return self.calculate(rule, args)
-        if rule == "print_call":
-            return self.print_value(args[0])
-        if rule == "concat_call":
-            return self.concat_values(args)
-        raise ConfigError(f"Неизвестная конструкция: {rule}")
+        actions = {
+            "number": lambda: int(str(args[0])),
+            "string": lambda: str(args[0])[2:-1],
+            "array": lambda: [self.evaluate(item) for item in args],
+            "object": lambda: self.evaluate_object(args),
+            "pair": lambda: (str(args[0]), self.evaluate(args[1])),
+            "expression": lambda: self.evaluate(args[0]),
+            "reference": lambda: self.get_constant(str(args[0])),
+            "add": lambda: self.calculate(rule, args),
+            "subtract": lambda: self.calculate(rule, args),
+            "multiply": lambda: self.calculate(rule, args),
+            "divide": lambda: self.calculate(rule, args),
+            "print_call": lambda: self.print_value(args[0]),
+            "concat_call": lambda: self.concat_values(args),
+        }
+        action = actions.get(rule)
+        if action is None:
+            raise ConfigError(f"Неизвестная конструкция: {rule}")
+        return action()
 
     def evaluate_object(self, pairs: list[Any]) -> dict[str, Any]:
         """Evaluate dictionary entries and reject duplicate names."""
@@ -122,14 +125,18 @@ class Evaluator:
         for pair in pairs:
             key, value = self.evaluate(pair)
             if key in result:
-                raise ConfigError(f"Ключ '{key}' указан повторно")
+                raise ConfigError(
+                    f"Ключ '{key}' указан повторно"
+                )
             result[key] = value
         return result
 
     def get_constant(self, name: str) -> Any:
         """Return a previously declared constant."""
         if name not in self.constants:
-            raise ConfigError(f"Неизвестная константа: '{name}'")
+            raise ConfigError(
+                f"Неизвестная константа: '{name}'"
+            )
         return self.constants[name]
 
     def calculate(self, operation: str, args: list[Any]) -> Any:
@@ -137,14 +144,16 @@ class Evaluator:
         left = self.evaluate(args[0])
         right = self.evaluate(args[1])
         if not self.is_number(left) or not self.is_number(right):
-            raise ConfigError("Для арифметики нужны два числа")
+            raise ConfigError(
+                "Для арифметики нужны два числа"
+            )
         if operation == "add":
             return left + right
         if operation == "subtract":
             return left - right
         if operation == "multiply":
             return left * right
-        if right == 0:
+        if right == ZERO:
             raise ConfigError("Деление на ноль")
         return left / right
 
@@ -185,7 +194,8 @@ def convert(source: str) -> Any:
         context = error.get_context(source, span=30).strip()
         details = f"\n{context}" if context else ""
         raise ConfigError(
-            f"Синтаксическая ошибка, строка {line}, столбец {column}"
+            "Синтаксическая ошибка, строка "
+            f"{line}, столбец {column}"
             f"{details}"
         ) from error
     return Evaluator().run(tree)
