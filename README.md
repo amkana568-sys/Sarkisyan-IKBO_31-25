@@ -130,7 +130,7 @@ python -m unittest discover -s tests -v
 
 Тесты проверяют комментарии, числа, строки, массивы, словари, вложенность,
 объявление и использование констант, четыре арифметические операции,
-`print()`, `concat()` и сообщения об ошибках.
+`print()`, `concat()`, обработку ошибок и работу командной строки.
 
 ## Замечания о правилах языка
 
@@ -189,8 +189,16 @@ Get-Content -Raw examples/library.cfg | .\run.bat result.json
 
 ## Публикация в GitHub / GitLab
 
-Создайте пустой публичный репозиторий на выбранном Git-сервисе.
-Затем откройте терминал в корне распакованного проекта и выполните:
+1. Войдите в свой аккаунт GitHub или GitLab.
+2. Создайте новый репозиторий с названием `variant23`.
+3. Установите видимость `Public`.
+4. Не добавляйте при создании README, `.gitignore` и лицензию:
+   эти файлы уже есть в проекте.
+5. Скопируйте HTTPS-адрес созданного репозитория.
+6. Откройте терминал в корне распакованного проекта.
+
+Для GitHub далее выполните команды. Замените `USERNAME` на имя
+своего аккаунта:
 
 ```bash
 git init
@@ -199,7 +207,7 @@ git commit -m "chore: add project setup"
 git add src/
 git commit -m "feat(parser): implement variant 23 parser"
 git add tests/
-git commit -m "test: cover syntax and nested values"
+git commit -m "test: cover syntax and command line"
 git add examples/ README.md
 git commit -m "docs: add usage guide and configuration examples"
 git branch -M main
@@ -207,6 +215,14 @@ git remote add origin https://github.com/USERNAME/variant23.git
 git push -u origin main
 ```
 
-Вместо `USERNAME` и адреса GitHub укажите свой аккаунт и URL созданного
-репозитория. Для GitLab замените URL на адрес репозитория GitLab.
-Коммиты оформлены в стиле Conventional Commits и показывают этапы работы.
+Для GitLab замените URL на HTTPS-адрес своего репозитория. Если Git
+запрашивает имя и email автора коммитов, задайте их командами:
+
+```bash
+git config --global user.name "Ваше имя"
+git config --global user.email "ваш-email@example.com"
+```
+
+После отправки проверьте вкладку `Commits`: в истории должны быть четыре
+осмысленных коммита. В настройках репозитория проверьте, что он остаётся
+публичным. Ссылку на страницу репозитория отправьте в СДО.
