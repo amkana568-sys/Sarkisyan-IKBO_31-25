@@ -13,10 +13,16 @@ from config_parser import ConfigError, convert
 def make_parser() -> argparse.ArgumentParser:
     """Create command-line argument parser."""
     parser = argparse.ArgumentParser(
-        description="Конвертер учебного конфигурационного языка в JSON"
+        description=(
+            "Конвертер учебного конфигурационного "
+            "языка в JSON"
+        )
     )
     parser.add_argument(
-        "-o", "--output", required=True, help="путь к выходному JSON-файлу"
+        "-o",
+        "--output",
+        required=True,
+        help="путь к выходному JSON-файлу",
     )
     return parser
 
